@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sessions API Test</title>
+</head>
+<body>
+    <h1>Sessions API Test</h1>
+    <button onclick="testSessions()">Test Sessions API</button>
+    <button onclick="testChat()">Test Chat API</button>
+    <div id="results"></div>
+
+    <script>
+        async function testSessions() {
+            try {
+                console.log('Testing sessions API...');
+                const res = await fetch('http://localhost:5000/api/sessions');
+                console.log('Status:', res.status);
+                const data = await res.json();
+                console.log('Sessions data:', data);
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('Sessions error:', error.message);
+                document.getElementById('results').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testChat() {
+            try {
+                console.log('Testing chat API...');
+                const res = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Hello test',
+                        model: 'groq-fast'
+                    })
+                });
+                console.log('Status:', res.status);
+                const data = await res.json();
+                console.log('Chat response:', data);
+            } catch (error) {
+                console.error('Chat error:', error.message);
+                document.getElementById('results').innerHTML = '<p style="color: red;">Chat Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

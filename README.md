@@ -30,7 +30,6 @@ ThinkGPT is an advanced AI-powered conversational platform that integrates multi
 
 ### Frontend
 - React.js (Vite)
-- Tailwind CSS (if used)
 
 ### Backend
 - Node.js
@@ -40,10 +39,6 @@ ThinkGPT is an advanced AI-powered conversational platform that integrates multi
 - MongoDB (Mongoose)
 
 ### AI Integration
-- Google Gemini API
 - Groq API
 
----
-
-## Project Structure
 

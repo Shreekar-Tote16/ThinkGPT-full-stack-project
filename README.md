@@ -41,9 +41,7 @@ ThinkGPT is an advanced AI-powered conversational platform that integrates multi
 
 ### AI Integration
 - Groq API
-
->>>>>>> 58c0ad1af6e829349ce6f6177509fe21b55a06ed
-
+  
 ThinkGPT is a full-stack AI conversational platform built using the MERN stack. It brings multiple AI models into one interface, allowing users to switch between models, maintain conversation context, and compare responses through a multi-model Ensemble Mode.
 
 The project focuses on exploring multi-model AI integration, conversational context management, authentication, streaming responses, and full-stack application development.

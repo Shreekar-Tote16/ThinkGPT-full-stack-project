@@ -1,126 +1,666 @@
-// src/pages/ChatPage.jsx
-import { useRef } from "react";
-import { Link } from "react-router-dom";
-import MessageList from "../components/MessageList";
-import ChatInput   from "../components/ChatInput";
-import RightPanel  from "../components/RightPanel";
-import EnsembleChat from "../components/EnsembleChat";
-import { useChatStream } from "../hooks/useChatStream";
+// //C:\Users\user\ThinkGPT\frontend\src\pages\ChatPage.jsx
+// import { useRef } from "react";
+// import { Link } from "react-router-dom";
 
+// import MessageList from "../components/MessageList";
+// import ChatInput from "../components/ChatInput";
+// import RightPanel from "../components/RightPanel";
+// import EnsembleChat from "../components/EnsembleChat";
+
+// import { useChatStream } from "../hooks/useChatStream";
+
+// const MODEL_LABELS = {
+//   "auto": "Auto — GPT-OSS 20B",
+//   "groq-fast": "GPT-OSS 20B — Fast",
+//   "groq-large": "GPT-OSS 120B — Advanced Reasoning",
+//   "groq-qwen": "Qwen 3.8 27B — Preview",
+//   "ensemble": "✦ Ensemble — All 3 Models",
+// };
+
+// const SIDEBAR_HISTORY = [
+//   "Explain quantum entanglement",
+//   "Write a React component",
+//   "Debug my Python script",
+//   "Plan a healthy weekly menu",
+//   "Summarize climate report",
+// ];
+
+// export default function ChatPage() {
+//   const {
+//     messages,
+//     model,
+//     setModel,
+//     sessionId,
+//     loading,
+//     sessionsVersion,
+//     sendMessage,
+//     stopStreaming,
+//     loadSession,
+//     newChat,
+//   } = useChatStream();
+
+//   const chatInputRef = useRef(null);
+
+//   const handleQuickPrompt = (promptText) => {
+//     chatInputRef.current?.prefill?.(promptText);
+//   };
+
+//   const handleSuggestionClick = (suggestion) => {
+//     chatInputRef.current?.prefill?.(suggestion);
+//   };
+
+//   const handleSidebarHistoryClick = (item) => {
+//     chatInputRef.current?.prefill?.(item);
+//   };
+
+//   const handleLoadSession = (sessionId, sessionMessages) => {
+//     console.log(
+//       "Loading session:",
+//       sessionId,
+//       "with",
+//       sessionMessages?.length,
+//       "messages"
+//     );
+
+//     loadSession(sessionId, sessionMessages);
+//   };
+
+//   // When ensemble mode is active, swap out main area.
+//   const isEnsemble = model === "ensemble";
+
+//   return (
+//     <div className="chat-layout">
+
+//       {/* ── LEFT SIDEBAR ── */}
+//       <aside className="chat-sidebar">
+
+//         <Link to="/" className="sidebar-logo">
+//           <div className="logo-icon">T</div>
+//           ThinkGPT
+//         </Link>
+
+//         <button
+//           className="new-chat-btn"
+//           onClick={newChat}
+//         >
+//           <span>+</span> New conversation
+//         </button>
+
+//         <p className="sidebar-section-label">Recent</p>
+
+//         <div className="history-list">
+//           {SIDEBAR_HISTORY.map(item => (
+//             <div
+//               key={item}
+//               className="history-item"
+//               onClick={() => handleSidebarHistoryClick(item)}
+//               style={{ cursor: "pointer" }}
+//             >
+//               💬 {item}
+//             </div>
+//           ))}
+//         </div>
+
+//         <div className="sidebar-bottom">
+
+//           <span className="sidebar-model-label">
+//             Active model
+//           </span>
+
+//           <select
+//             className="sidebar-model-select"
+//             value={model}
+//             onChange={e => setModel(e.target.value)}
+//           >
+
+//             <optgroup label="Auto">
+//               <option value="auto">
+//                 Auto — GPT-OSS 20B
+//               </option>
+//             </optgroup>
+
+//             <optgroup label="Groq Cloud">
+//               <option value="groq-fast">
+//                 GPT-OSS 20B — Fast
+//               </option>
+
+//               <option value="groq-large">
+//                 GPT-OSS 120B — Advanced Reasoning
+//               </option>
+
+//               <option value="groq-qwen">
+//                 Qwen 3.8 27B — Preview
+//               </option>
+//             </optgroup>
+
+//             <optgroup label="Special">
+//               <option value="ensemble">
+//                 ✦ Ensemble — All 3 Models
+//               </option>
+//             </optgroup>
+
+//           </select>
+
+//         </div>
+//       </aside>
+
+//       {/* ── MAIN AREA — swaps between normal chat and ensemble ── */}
+
+//       {isEnsemble ? (
+
+//         // ── ENSEMBLE VIEW ──
+//         <EnsembleChat
+//           sessionId={sessionId}
+//         />
+
+//       ) : (
+
+//         // ── NORMAL CHAT VIEW ──
+//         <main className="chat-main">
+
+//           <div className="chat-header">
+
+//             <div className="chat-header-model">
+//               <div className="model-dot" />
+//               {MODEL_LABELS[model] || model}
+//             </div>
+
+//             <div className="chat-header-actions">
+//               <Link to="/">
+//                 <button className="icon-btn" title="Home">
+//                   ⌂
+//                 </button>
+//               </Link>
+//             </div>
+
+//           </div>
+
+//           <MessageList
+//             messages={messages}
+//             loading={loading}
+//             onSuggestionClick={handleSuggestionClick}
+//           />
+
+//           <ChatInput
+//             ref={chatInputRef}
+//             sendMessage={sendMessage}
+//             stopStreaming={stopStreaming}
+//             loading={loading}
+//           />
+
+//         </main>
+//       )}
+
+//       {/* ── RIGHT PANEL — hidden in ensemble ── */}
+
+//       {!isEnsemble && (
+//         <RightPanel
+//           messages={messages}
+//           model={model}
+//           onQuickPrompt={handleQuickPrompt}
+//           onSuggestionClick={handleSuggestionClick}
+//           onLoadSession={handleLoadSession}
+//           refreshTrigger={sessionsVersion}
+//         />
+//       )}
+
+//     </div>
+//   );
+// }
+
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+
+import MessageList from "../components/MessageList";
+import ChatInput from "../components/ChatInput";
+import RightPanel from "../components/RightPanel";
+import EnsembleChat from "../components/EnsembleChat";
+import { getSessionMessages, getSessions } from "../services/api";
+import { useChatStream } from "../hooks/useChatStream";
+import { useAuth } from "../context/AuthContext";
+
+// Keep this list aligned with the active model IDs in backend/services/modelRouter.js
+// and backend/services/router.service.js. Qwen has intentionally been removed.
 const MODEL_LABELS = {
-  "auto":        "Auto (Groq Fast)",
-  "groq-fast":   "Llama 3.1 8B — Fast",
-  "groq-large":  "Llama 3.3 70B — Powerful",
-  "groq-qwen":   "Qwen 3 32B — Alibaba",
-  "groq-llama4": "Llama 4 Scout — Latest",
-  "ensemble":    "✦ Ensemble — All 4 Models",
+  auto: "Auto — Smart Model Routing",
+  "groq-fast": "GPT-OSS 20B — Fast",
+  "groq-large": "GPT-OSS 120B — Advanced Reasoning",
+  "cloudflare-gemma": "Gemma 4 26B A4B — Cloudflare",
+  "cloudflare-glm": "GLM 4.7 Flash — Cloudflare",
+  ensemble: "✦ Ensemble — All 4 Models",
 };
 
-const SIDEBAR_HISTORY = [
-  "Explain quantum entanglement",
-  "Write a React component",
-  "Debug my Python script",
-  "Plan a healthy weekly menu",
-  "Summarize climate report",
-];
+const VALID_MODEL_IDS = new Set(Object.keys(MODEL_LABELS));
 
 export default function ChatPage() {
-  const { messages, model, setModel, loading, sendMessage, stopStreaming, loadSession } = useChatStream();
+  const {
+    messages,
+    model,
+    setModel,
+    sessionId,
+    loading,
+    sessionsVersion,
+    sendMessage,
+    stopStreaming,
+    loadSession,
+    newChat,
+  } = useChatStream();
+
+const {
+  user,
+  isAuthenticated,
+  authLoading,
+  logout,
+} = useAuth();
+
+const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+const [logoutLoading, setLogoutLoading] = useState(false);
+const [accountError, setAccountError] = useState("");
+
+
   const chatInputRef = useRef(null);
+  const recentRequestIdRef = useRef(0);
+
+  const [recentSessions, setRecentSessions] = useState([]);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [recentError, setRecentError] = useState("");
+  const [loadingSessionId, setLoadingSessionId] = useState(null);
+  const [recentRefreshVersion, setRecentRefreshVersion] = useState(0);
+
+  // A stale model (for example, groq-qwen from an older frontend build) must
+  // never be sent to the current backend.
+  const activeModel = VALID_MODEL_IDS.has(model) ? model : "groq-fast";
+
+const accountDisplayName = isAuthenticated
+  ? user?.name || user?.email || "Your account"
+  : "Guest";
+
+const accountInitial = accountDisplayName.charAt(0).toUpperCase();
+
+const historyOwnerKey = isAuthenticated
+  ? user?._id || user?.id || user?.email || "signed-in"
+  : "guest";
+
+  useEffect(() => {
+    if (!VALID_MODEL_IDS.has(model)) {
+      setModel("groq-fast");
+    }
+  }, [model, setModel]);
+
+  const isEnsemble = activeModel === "ensemble";
+  const modelLabel = MODEL_LABELS[activeModel];
+
+  // Load real, guest-owned conversations for the left sidebar.
+  // Request cancellation prevents a late response from an older render
+  // replacing a newer history list.
+  useEffect(() => {
+    let isActive = true;
+    const requestId = ++recentRequestIdRef.current;
+
+    const loadRecentSessions = async () => {
+      setRecentLoading(true);
+      setRecentError("");
+
+      try {
+        const result = await getSessions();
+        if (isActive && requestId === recentRequestIdRef.current) {
+          setRecentSessions(Array.isArray(result) ? result : []);
+        }
+      } catch (error) {
+        if (isActive && requestId === recentRequestIdRef.current) {
+          setRecentError(error.message || "Could not load recent conversations.");
+          setRecentSessions([]);
+        }
+      } finally {
+        if (isActive && requestId === recentRequestIdRef.current) {
+          setRecentLoading(false);
+        }
+      }
+    };
+
+    void loadRecentSessions();
+
+    return () => {
+      isActive = false;
+    };
+  }, [
+  sessionsVersion,
+  recentRefreshVersion,
+  sessionId,
+  activeModel,
+  historyOwnerKey,
+]);
 
   const handleQuickPrompt = (promptText) => {
     chatInputRef.current?.prefill?.(promptText);
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    chatInputRef.current?.prefill?.(suggestion);
+  const handleNewChat = () => {
+    // Invalidate any history request that is currently in flight.
+    recentRequestIdRef.current += 1;
+    setLoadingSessionId(null);
+    newChat();
+  };
+const handleAccountLogout = async () => {
+  if (logoutLoading) return;
+
+  setLogoutLoading(true);
+  setAccountError("");
+
+  try {
+    await logout();
+
+    setAccountMenuOpen(false);
+
+    // Clear the current chat after logout.
+    // The history effect will reload guest-owned conversations.
+    handleNewChat();
+  } catch (error) {
+    setAccountError(error.message || "Could not sign out.");
+  } finally {
+    setLogoutLoading(false);
+  }
+};
+
+  const handleLoadSession = (selectedSessionId, sessionMessages) => {
+    if (!selectedSessionId) return;
+
+    recentRequestIdRef.current += 1;
+    setLoadingSessionId(null);
+    loadSession(
+      selectedSessionId,
+      Array.isArray(sessionMessages) ? sessionMessages : []
+    );
+
+    // Saved Ensemble history contains the original prompt and synthesized
+    // answer, so display it in the regular conversation view.
+    if (activeModel === "ensemble") {
+      setModel("auto");
+    }
   };
 
-  const handleSidebarHistoryClick = (item) => {
-    chatInputRef.current?.prefill?.(item);
+  const handleRecentSessionClick = async (selectedSessionId) => {
+    const requestId = ++recentRequestIdRef.current;
+    setLoadingSessionId(selectedSessionId);
+    setRecentError("");
+
+    try {
+      const sessionMessages = await getSessionMessages(selectedSessionId);
+
+      if (requestId !== recentRequestIdRef.current) return;
+
+      handleLoadSession(selectedSessionId, sessionMessages);
+    } catch (error) {
+      if (requestId === recentRequestIdRef.current) {
+        setRecentError(error.message || "Could not open this conversation.");
+      }
+    } finally {
+      if (requestId === recentRequestIdRef.current) {
+        setLoadingSessionId(null);
+      }
+    }
   };
 
-  const handleLoadSession = (sessionId, sessionMessages) => {
-    // Load the session messages into the chat
-    console.log('Loading session:', sessionId, 'with', sessionMessages?.length, 'messages');
-    loadSession(sessionId, sessionMessages);  // Actually call the hook function!
+  const handleRecentSessionKeyDown = (event, selectedSessionId) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      void handleRecentSessionClick(selectedSessionId);
+    }
   };
 
-  // ── When ensemble mode is active, swap out main area ──────────────────
-  const isEnsemble = model === "ensemble";
+  // const handleRightPanelLoadSession = (selectedSessionId, sessionMessages) => {
+  //   handleLoadSession(selectedSessionId, sessionMessages);
+  // };
+
+  // The refreshed Recent list can also be requested after an Ensemble save.
+  // The current EnsembleChat component can call this callback once synthesis
+  // and persistence have completed.
+  const handleEnsembleSaved = () => {
+    setRecentRefreshVersion((version) => version + 1);
+  };
 
   return (
     <div className="chat-layout">
-
       {/* ── LEFT SIDEBAR ── */}
       <aside className="chat-sidebar">
-        <Link to="/" className="sidebar-logo">
-          <div className="logo-icon">T</div>
-          ThinkGPT
-        </Link>
+        <Link
+  to="/chat"
+  className="sidebar-logo"
+  onClick={handleNewChat}
+  title="Start a new conversation"
+  aria-label="ThinkGPT - Start a new conversation"
+>
+  <div className="logo-icon">T</div>
+  ThinkGPT
+</Link>
 
-        <button className="new-chat-btn" onClick={() => window.location.reload()}>
+        <button
+          className="new-chat-btn"
+          onClick={handleNewChat}
+          type="button"
+        >
           <span>+</span> New conversation
         </button>
 
         <p className="sidebar-section-label">Recent</p>
-        <div className="history-list">
-          {SIDEBAR_HISTORY.map(item => (
-            <div 
-              key={item} 
-              className="history-item"
-              onClick={() => handleSidebarHistoryClick(item)}
-              style={{ cursor: "pointer" }}
-            >
-              💬 {item}
+
+        <div className="history-list" aria-label="Recent conversations">
+          {recentLoading ? (
+            <div className="history-item" aria-live="polite">
+              Loading recent chats…
             </div>
-          ))}
+          ) : recentSessions.length === 0 ? (
+            <div className="history-item">
+              {recentError || "No conversations yet"}
+            </div>
+          ) : (
+            recentSessions.map((session) => (
+              <div
+                key={session.id}
+                className="history-item"
+                role="button"
+                tabIndex={0}
+                title={session.title || "New conversation"}
+                aria-current={session.id === sessionId ? "page" : undefined}
+                aria-busy={loadingSessionId === session.id}
+                onClick={() => void handleRecentSessionClick(session.id)}
+                onKeyDown={(event) =>
+                  handleRecentSessionKeyDown(event, session.id)
+                }
+              >
+                {loadingSessionId === session.id ? "◌ " : "💬 "}
+                {session.title || "New conversation"}
+              </div>
+            ))
+          )}
         </div>
 
+        {recentError && recentSessions.length > 0 && (
+          <p className="sidebar-section-label" role="status">
+            {recentError}
+          </p>
+        )}
+
+        {/* ── ACTIVE MODEL SELECTOR ── */}
         <div className="sidebar-bottom">
           <span className="sidebar-model-label">Active model</span>
+
           <select
             className="sidebar-model-select"
-            value={model}
-            onChange={e => setModel(e.target.value)}
+            value={activeModel}
+            onChange={(event) => setModel(event.target.value)}
+            disabled={loading}
+            aria-label="Select active AI model"
           >
             <optgroup label="Auto">
-              <option value="auto">Auto (Groq Fast)</option>
+              <option value="auto">Auto — Smart Model Routing</option>
             </optgroup>
+
             <optgroup label="Groq Cloud">
-              <option value="groq-fast">Llama 3.1 8B — Fast</option>
-              <option value="groq-large">Llama 3.3 70B — Powerful</option>
-              <option value="groq-qwen">Qwen 3 32B — Alibaba</option>
-              <option value="groq-llama4">Llama 4 Scout — Latest</option>
+              <option value="groq-fast">GPT-OSS 20B — Fast</option>
+              <option value="groq-large">
+                GPT-OSS 120B — Advanced Reasoning
+              </option>
             </optgroup>
+
+            <optgroup label="Cloudflare Workers AI">
+              <option value="cloudflare-gemma">Gemma 4 26B A4B</option>
+              <option value="cloudflare-glm">GLM 4.7 Flash</option>
+            </optgroup>
+
             <optgroup label="Special">
               <option value="ensemble">✦ Ensemble — All 4 Models</option>
             </optgroup>
           </select>
         </div>
+                {/* ── ACCOUNT SECTION ── */}
+        <div className="chat-account">
+          <button
+            type="button"
+            className="chat-account-trigger"
+            onClick={() => setAccountMenuOpen((open) => !open)}
+            aria-expanded={accountMenuOpen}
+            aria-controls="chat-account-menu"
+          >
+            <span className="chat-account-avatar">
+              {accountInitial}
+            </span>
+
+            <span className="chat-account-details">
+              <span className="chat-account-name">
+                {authLoading ? "Checking account..." : accountDisplayName}
+              </span>
+
+              <span className="chat-account-status">
+                {authLoading
+                  ? "Restoring session"
+                  : isAuthenticated
+                    ? "Signed in"
+                    : "Guest session"}
+              </span>
+            </span>
+
+            <span className="chat-account-chevron">
+              {accountMenuOpen ? "⌄" : "⌃"}
+            </span>
+          </button>
+
+          {accountMenuOpen && (
+            <div
+              className="chat-account-menu"
+              id="chat-account-menu"
+            >
+              {authLoading ? (
+                <div className="chat-account-menu-heading">
+                  <strong>Checking account</strong>
+                  <span>Restoring your session...</span>
+                </div>
+              ) : isAuthenticated ? (
+                <>
+                  <div className="chat-account-menu-heading">
+                    <strong>{accountDisplayName}</strong>
+                    <span>{user?.email || "Account signed in"}</span>
+                  </div>
+
+                  <div className="chat-account-divider" />
+
+                  <Link
+                    to="/"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    Home
+                  </Link>
+
+                  <Link
+                    to="/features"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    Features
+                  </Link>
+
+                  <Link
+                    to="/about"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    About
+                  </Link>
+
+                  <div className="chat-account-divider" />
+
+                  <button
+                    type="button"
+                    className="chat-account-signout"
+                    onClick={() => void handleAccountLogout()}
+                    disabled={logoutLoading}
+                  >
+                    {logoutLoading ? "Signing out..." : "Sign out"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="chat-account-menu-heading">
+                    <strong>Guest session</strong>
+                    <span>
+                      Sign in to access your account and saved conversations.
+                    </span>
+                  </div>
+
+                  <div className="chat-account-divider" />
+
+                  <Link
+                    to="/login"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+
+                  <Link
+                    to="/get-started"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    Create account
+                  </Link>
+                </>
+              )}
+
+              {accountError && (
+                <p className="chat-account-error" role="alert">
+                  {accountError}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </aside>
 
-      {/* ── MAIN AREA — swaps between normal chat and ensemble ── */}
+      {/* ── MAIN AREA: NORMAL CHAT OR ENSEMBLE ── */}
       {isEnsemble ? (
-
-        // ── ENSEMBLE VIEW ──────────────────────────────────────────────────
-        <EnsembleChat />
-
+       <EnsembleChat
+  key={historyOwnerKey}
+  sessionId={sessionId}
+  onConversationSaved={handleEnsembleSaved}
+/>
       ) : (
-
-        // ── NORMAL CHAT VIEW ───────────────────────────────────────────────
         <main className="chat-main">
           <div className="chat-header">
             <div className="chat-header-model">
               <div className="model-dot" />
-              {MODEL_LABELS[model] || model}
+              {modelLabel}
             </div>
+
             <div className="chat-header-actions">
-              <Link to="/"><button className="icon-btn" title="Home">⌂</button></Link>
+              <Link to="/" aria-label="Home">
+                <button className="icon-btn" title="Home" type="button">
+                  ⌂
+                </button>
+              </Link>
             </div>
           </div>
 
-          <MessageList messages={messages} loading={loading} onSuggestionClick={handleSuggestionClick} />
+          <MessageList
+            messages={messages}
+            onSuggestionClick={handleQuickPrompt}
+          />
 
           <ChatInput
             ref={chatInputRef}
@@ -131,15 +671,22 @@ export default function ChatPage() {
         </main>
       )}
 
-      {/* ── RIGHT PANEL — hidden in ensemble (not enough space) ── */}
+      {/* Keep the right-side history/session panel out of Ensemble Mode so the
+          four model cards retain their existing 2×2 workspace. */}
       {!isEnsemble && (
+        // <RightPanel
+        //   messages={messages}
+        //   model={activeModel}
+        //   onQuickPrompt={handleQuickPrompt}
+        //   onSuggestionClick={handleQuickPrompt}
+        //   onLoadSession={handleRightPanelLoadSession}
+        //   refreshTrigger={sessionsVersion + recentRefreshVersion}
+        // />
         <RightPanel
-          messages={messages}
-          model={model}
-          onQuickPrompt={handleQuickPrompt}
-          onSuggestionClick={handleSuggestionClick}
-          onLoadSession={handleLoadSession}
-        />
+  messages={messages}
+  model={activeModel}
+  onQuickPrompt={handleQuickPrompt}
+/>
       )}
     </div>
   );

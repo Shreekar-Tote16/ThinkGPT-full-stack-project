@@ -99,83 +99,276 @@
 
 
 // src/hooks/useChatStream.js
-import { useState, useRef } from "react";
-import { streamChat, sendChat } from "../services/api";
 
-// All current models support Groq streaming
-const STREAMING_MODELS = ["auto", "groq-fast", "groq-large", "groq-qwen", "groq-llama4"];
+import { useState, useRef, useEffect } from "react";
+
+import {
+  streamChat,
+  sendChat,
+  ensureGuestSession,
+  getSessionMessages,
+} from "../services/api";
+
+const STREAMING_MODELS = [
+  "auto",
+  "groq-fast",
+  "groq-large",
+  "groq-qwen",
+];
+
+const SESSION_STORAGE_KEY = "thinkgpt.activeSessionId";
+
+function createSessionId() {
+  return crypto.randomUUID();
+}
+
+function getInitialSessionId() {
+  const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
+
+  if (existing) return existing;
+
+  const newId = createSessionId();
+  sessionStorage.setItem(SESSION_STORAGE_KEY, newId);
+
+  return newId;
+}
 
 export const useChatStream = () => {
   const [messages, setMessages] = useState([]);
-  const [model, setModel]       = useState("groq-fast");
-  const [loading, setLoading]   = useState(false);
-  const controllerRef           = useRef(null);
+  const [model, setModel] = useState("groq-fast");
+  const [sessionId, setSessionId] = useState(getInitialSessionId);
+  const [loading, setLoading] = useState(false);
+  const [sessionsVersion, setSessionsVersion] = useState(0);
 
-  const append = (msg) =>
-    setMessages(prev => [...prev, msg]);
+  const controllerRef = useRef(null);
+  const requestIdRef = useRef(0);
+  const initialSessionIdRef = useRef(sessionId);
 
-  const updateLast = (chunk) => {
-    setMessages(prev => {
-      const copy = [...prev];
+  // Keep the active session ID in this browser tab.
+  useEffect(() => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+  }, [sessionId]);
+
+  // Restore the current conversation after a page refresh.
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreSession = async () => {
+      try {
+        await ensureGuestSession();
+
+        const history = await getSessionMessages(
+          initialSessionIdRef.current
+        );
+
+        if (!cancelled) {
+          setMessages(history);
+        }
+      } catch (error) {
+        console.error("Failed to restore conversation:", error.message);
+      }
+    };
+
+    restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const updateLast = (value, replace = false) => {
+    setMessages((previous) => {
+      const copy = [...previous];
       const last = copy.length - 1;
-      if (last < 0 || copy[last].role !== "assistant") return prev;
-      copy[last] = { ...copy[last], content: (copy[last].content || "") + chunk };
+
+      if (last < 0 || copy[last].role !== "assistant") {
+        return previous;
+      }
+
+      const oldContent = copy[last].content || "";
+
+      copy[last] = {
+        ...copy[last],
+        content: replace ? value : oldContent + value,
+      };
+
+      return copy;
+    });
+  };
+
+  const finishLast = () => {
+    setMessages((previous) => {
+      const copy = [...previous];
+      const last = copy.length - 1;
+
+      if (last < 0 || copy[last].role !== "assistant") {
+        return previous;
+      }
+
+      copy[last] = {
+        ...copy[last],
+        isStreaming: false,
+      };
+
       return copy;
     });
   };
 
   const sendMessage = async (text) => {
-    if (!text.trim() || loading) return;
+    const cleanText = text.trim();
 
-    append({ role: "user",      content: text });
-    append({ role: "assistant", content: "", isStreaming: true });
+    if (!cleanText || loading) return;
+
+    const activeSessionId = sessionId;
+    const requestId = ++requestIdRef.current;
+
+    setMessages((previous) => [
+      ...previous,
+      {
+        role: "user",
+        content: cleanText,
+      },
+      {
+        role: "assistant",
+        content: "",
+        isStreaming: true,
+      },
+    ]);
+
     setLoading(true);
 
     const isStreaming = STREAMING_MODELS.includes(model);
 
     try {
       if (isStreaming) {
-        controllerRef.current = await streamChat(
-          text,
+        // IMPORTANT: No await here.
+        // Controller must be available immediately for Stop Generation.
+        controllerRef.current = streamChat(
+          cleanText,
           model,
+          activeSessionId,
+
           (chunk) => {
-            if (chunk.done)     { setLoading(false); return; }
-            if (chunk.error)    { updateLast("❌ " + chunk.error); setLoading(false); return; }
-            if (chunk.token)    { updateLast(chunk.token); }
-            if (chunk.response) { updateLast(chunk.response); }
+            if (requestId !== requestIdRef.current) return;
+
+            if (chunk.token) {
+              updateLast(chunk.token);
+            }
+
+            if (chunk.done) {
+              if (typeof chunk.response === "string") {
+                updateLast(chunk.response, true);
+              }
+
+              finishLast();
+            }
+
+            if (chunk.error) {
+              updateLast(`\n\n❌ ${chunk.error}`);
+              finishLast();
+            }
           },
-          (err) => {
-            updateLast("❌ " + err.message);
+
+          (error) => {
+            if (requestId !== requestIdRef.current) return;
+
+            updateLast(`❌ ${error.message}`);
+            finishLast();
+          },
+
+          () => {
+            if (requestId !== requestIdRef.current) return;
+
             setLoading(false);
+            finishLast();
+            setSessionsVersion((version) => version + 1);
+            controllerRef.current = null;
           }
         );
+
       } else {
-        // Fallback non-streaming (future models)
-        const res = await sendChat(text, model);
-        setMessages(prev => {
-          const copy = [...prev];
-          const last = copy.length - 1;
-          if (last >= 0 && copy[last].role === "assistant") {
-            copy[last] = { ...copy[last], content: res.reply || "No response.", isStreaming: false };
-          }
-          return copy;
-        });
+        const response = await sendChat(
+          cleanText,
+          model,
+          activeSessionId
+        );
+
+        if (requestId !== requestIdRef.current) return;
+
+        updateLast(response.reply || "No response.", true);
+        finishLast();
+
         setLoading(false);
+        setSessionsVersion((version) => version + 1);
       }
-    } catch (err) {
-      updateLast("❌ " + err.message);
+
+    } catch (error) {
+      if (requestId !== requestIdRef.current) return;
+
+      updateLast(`❌ ${error.message}`);
+      finishLast();
+
       setLoading(false);
+      setSessionsVersion((version) => version + 1);
     }
   };
 
-  const stopStreaming = () => {
-    controllerRef.current?.abort?.();
+  // Start a fresh conversation without reloading the application.
+  const newChat = () => {
+    requestIdRef.current += 1;
+
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+
+    const newId = createSessionId();
+
+    sessionStorage.setItem(SESSION_STORAGE_KEY, newId);
+
+    setSessionId(newId);
+    setMessages([]);
     setLoading(false);
   };
 
-  const loadSession = (sessionId, sessionMessages) => {
+  // Restore a selected conversation.
+  const loadSession = (selectedSessionId, sessionMessages) => {
+    requestIdRef.current += 1;
+
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      selectedSessionId
+    );
+
+    setSessionId(selectedSessionId);
     setMessages(sessionMessages);
+    setLoading(false);
   };
 
-  return { messages, model, setModel, loading, sendMessage, stopStreaming, loadSession };
+  // Cancel current generation.
+  const stopStreaming = () => {
+    requestIdRef.current += 1;
+
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+
+    setLoading(false);
+    finishLast();
+
+    setSessionsVersion((version) => version + 1);
+  };
+
+  return {
+    messages,
+    model,
+    setModel,
+    sessionId,
+    loading,
+    sessionsVersion,
+    sendMessage,
+    stopStreaming,
+    loadSession,
+    newChat,
+  };
 };

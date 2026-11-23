@@ -1,183 +1,630 @@
-// src/components/RightPanel.jsx
-import { useState, useEffect } from "react";
-import { getSessions, getSessionMessages } from "../services/api";
+// import { useEffect, useRef, useState } from "react";
+// import { getSessionMessages, getSessions } from "../services/api";
 
-const QUICK_PROMPTS = [
-  { icon: "⚡", label: "Explain a concept", prompt: "Explain the concept of " },
-  { icon: "🐛", label: "Debug my code",     prompt: "Help me debug this code:\n\n" },
-  { icon: "✍️", label: "Write a function",  prompt: "Write a function that " },
-  { icon: "📋", label: "Summarize this",    prompt: "Summarize the following:\n\n" },
-];
+// const MODEL_INFO = {
+//   auto: {
+//     name: "Auto Routing",
+//     provider: "Groq + Cloudflare Workers AI",
+//     speed: "Intent-based selection",
+//     badge: "⚡",
+//     size: "Adaptive",
+//     mode: "Automatic",
+//   },
+//   "groq-fast": {
+//     name: "GPT-OSS 20B",
+//     provider: "Groq Cloud",
+//     speed: "Fast",
+//     badge: "⚡",
+//     size: "20B",
+//     mode: "Manual",
+//   },
+//   "groq-large": {
+//     name: "GPT-OSS 120B",
+//     provider: "Groq Cloud",
+//     speed: "Advanced reasoning",
+//     badge: "🧠",
+//     size: "120B",
+//     mode: "Manual",
+//   },
+//   "cloudflare-gemma": {
+//     name: "Gemma 4 26B A4B",
+//     provider: "Cloudflare Workers AI",
+//     speed: "General reasoning",
+//     badge: "💎",
+//     size: "26B A4B",
+//     mode: "Manual",
+//   },
+//   "cloudflare-glm": {
+//     name: "GLM 4.7 Flash",
+//     provider: "Cloudflare Workers AI",
+//     speed: "Fast reasoning",
+//     badge: "✨",
+//     size: "Flash",
+//     mode: "Manual",
+//   },
+//   ensemble: {
+//     name: "Ensemble Mode",
+//     provider: "Groq + Cloudflare Workers AI",
+//     speed: "Four concurrent models",
+//     badge: "✦",
+//     size: "4 models",
+//     mode: "Ensemble",
+//   },
+// };
+
+// const QUICK_PROMPTS = [
+//   {
+//     icon: "⚡",
+//     label: "Explain a concept",
+//     prompt: "Explain the concept of ",
+//   },
+//   {
+//     icon: "🐛",
+//     label: "Debug my code",
+//     prompt: "Help me debug this code:\n\n",
+//   },
+//   {
+//     icon: "✍️",
+//     label: "Write a function",
+//     prompt: "Write a function that ",
+//   },
+//   {
+//     icon: "📋",
+//     label: "Summarize this",
+//     prompt: "Summarize the following:\n\n",
+//   },
+// ];
+
+// const FALLBACK_MODEL_INFO = {
+//   name: "GPT-OSS 20B",
+//   provider: "Groq Cloud",
+//   speed: "Fast",
+//   badge: "⚡",
+//   size: "20B",
+//   mode: "Manual",
+// };
+
+// function countWords(messages) {
+//   return messages
+//     .filter((message) => message.role === "assistant")
+//     .reduce((total, message) => {
+//       const content =
+//         typeof message.content === "string" ? message.content.trim() : "";
+//       return total + (content ? content.split(/\s+/).length : 0);
+//     }, 0);
+// }
+
+// export default function RightPanel({
+//   messages = [],
+//   model = "groq-fast",
+//   onQuickPrompt,
+//   onSuggestionClick,
+//   onLoadSession,
+//   refreshTrigger = 0,
+// }) {
+//   const [tab, setTab] = useState("history");
+//   const [sessions, setSessions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [loadError, setLoadError] = useState("");
+//   const [loadingSessionId, setLoadingSessionId] = useState(null);
+
+//   const sessionRequestRef = useRef(0);
+//   const promptHandler = onQuickPrompt || onSuggestionClick;
+//   const info = MODEL_INFO[model] || FALLBACK_MODEL_INFO;
+
+//   const userMessageCount = messages.filter(
+//     (message) => message.role === "user"
+//   ).length;
+//   const assistantWordCount = countWords(messages);
+
+//   // Refresh the guest's saved conversations when the parent reports a save.
+//   // The active flag prevents an older request from updating an unmounted panel.
+//   useEffect(() => {
+//     let active = true;
+
+//     const fetchSessions = async () => {
+//       setLoading(true);
+//       setLoadError("");
+
+//       try {
+//         const result = await getSessions();
+//         if (active) {
+//           setSessions(Array.isArray(result) ? result : []);
+//         }
+//       } catch (error) {
+//         if (active) {
+//           setLoadError(
+//             error.message || "Could not load conversation history."
+//           );
+//           setSessions([]);
+//         }
+//       } finally {
+//         if (active) {
+//           setLoading(false);
+//         }
+//       }
+//     };
+
+//     void fetchSessions();
+
+//     return () => {
+//       active = false;
+//     };
+//   }, [refreshTrigger]);
+
+//   // Open a saved conversation. Only the most recently clicked session may load.
+//   const handleSessionClick = async (sessionId) => {
+//     const requestId = ++sessionRequestRef.current;
+//     setLoadingSessionId(sessionId);
+//     setLoadError("");
+
+//     try {
+//       const sessionMessages = await getSessionMessages(sessionId);
+
+//       if (requestId !== sessionRequestRef.current) return;
+
+//       if (!Array.isArray(sessionMessages)) {
+//         throw new Error("The server returned an invalid conversation.");
+//       }
+
+//       onLoadSession?.(sessionId, sessionMessages);
+//     } catch (error) {
+//       if (requestId === sessionRequestRef.current) {
+//         setLoadError(
+//           error.message || "Could not open this conversation."
+//         );
+//       }
+//     } finally {
+//       if (requestId === sessionRequestRef.current) {
+//         setLoadingSessionId(null);
+//       }
+//     }
+//   };
+
+//   const handleSessionKeyDown = (event, sessionId) => {
+//     if (event.key === "Enter" || event.key === " ") {
+//       event.preventDefault();
+//       void handleSessionClick(sessionId);
+//     }
+//   };
+
+//   const handleQuickPrompt = (prompt) => {
+//     promptHandler?.(prompt);
+//   };
+
+//   return (
+//     <aside className="right-panel">
+//       {/* History / Session tabs */}
+//       <div className="rp-tabs" role="tablist" aria-label="Chat sidebar">
+//         <button
+//           className={`rp-tab ${tab === "history" ? "active" : ""}`}
+//           onClick={() => setTab("history")}
+//           type="button"
+//           role="tab"
+//           aria-selected={tab === "history"}
+//         >
+//           History
+//         </button>
+//         <button
+//           className={`rp-tab ${tab === "info" ? "active" : ""}`}
+//           onClick={() => setTab("info")}
+//           type="button"
+//           role="tab"
+//           aria-selected={tab === "info"}
+//         >
+//           Session
+//         </button>
+//       </div>
+
+//       {/* History tab */}
+//       {tab === "history" && (
+//         <div className="rp-content" role="tabpanel">
+//           <p className="rp-section-label">Recent chats</p>
+
+//           <div
+//             className="rp-history-list"
+//             aria-label="Recent conversations"
+//             aria-live="polite"
+//           >
+//             {loading ? (
+//               <div className="rp-history-loading">
+//                 Loading conversations…
+//               </div>
+//             ) : sessions.length === 0 ? (
+//               <div className="rp-history-empty">
+//                 {loadError || "No conversations yet"}
+//               </div>
+//             ) : (
+//               sessions.map((session) => (
+//                 <div
+//                   key={session.id}
+//                   className="rp-history-item"
+//                   role="button"
+//                   tabIndex={0}
+//                   title={session.title || "New conversation"}
+//                   aria-busy={loadingSessionId === session.id}
+//                   onClick={() => void handleSessionClick(session.id)}
+//                   onKeyDown={(event) =>
+//                     handleSessionKeyDown(event, session.id)
+//                   }
+//                 >
+//                   <div className="rp-history-icon">
+//                     {loadingSessionId === session.id ? "◌" : "💬"}
+//                   </div>
+//                   <div className="rp-history-body">
+//                     <p className="rp-history-title">
+//                       {session.title || "New conversation"}
+//                     </p>
+//                     <p className="rp-history-preview">
+//                       {session.preview || "No preview available"}
+//                     </p>
+//                   </div>
+//                   <span className="rp-history-time">
+//                     {session.time || ""}
+//                   </span>
+//                 </div>
+//               ))
+//             )}
+//           </div>
+
+//           {loadError && sessions.length > 0 && (
+//             <div className="rp-history-empty" role="alert">
+//               {loadError}
+//             </div>
+//           )}
+
+//           <p className="rp-section-label" style={{ marginTop: 24 }}>
+//             Quick prompts
+//           </p>
+//           <div className="rp-quick-prompts">
+//             {QUICK_PROMPTS.map((prompt) => (
+//               <button
+//                 key={prompt.label}
+//                 className="rp-quick-btn"
+//                 onClick={() => handleQuickPrompt(prompt.prompt)}
+//                 type="button"
+//               >
+//                 <span>{prompt.icon}</span>
+//                 {prompt.label}
+//               </button>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Session / active model tab */}
+//       {tab === "info" && (
+//         <div className="rp-content" role="tabpanel">
+//           <p className="rp-section-label">Active model</p>
+
+//           <div className="rp-model-card">
+//             <div className="rp-model-badge">{info.badge || "✦"}</div>
+//             <div>
+//               <p className="rp-model-name">{info.name || "AI model"}</p>
+//               <p className="rp-model-meta">
+//                 {info.provider || "Provider unavailable"}
+//                 {info.speed ? ` · ${info.speed}` : ""}
+//               </p>
+//             </div>
+//           </div>
+
+//           <div className="rp-stats-grid">
+//             <div className="rp-stat">
+//               <span className="rp-stat-num">{info.size || "—"}</span>
+//               <span className="rp-stat-label">Model size / routing</span>
+//             </div>
+//             <div className="rp-stat">
+//               <span className="rp-stat-num">{info.mode || "—"}</span>
+//               <span className="rp-stat-label">Selection mode</span>
+//             </div>
+//             <div className="rp-stat">
+//               <span className="rp-stat-num">{userMessageCount}</span>
+//               <span className="rp-stat-label">User messages in this session</span>
+//             </div>
+//             <div className="rp-stat">
+//               <span className="rp-stat-num">{assistantWordCount}</span>
+//               <span className="rp-stat-label">Assistant words in this session</span>
+//             </div>
+//           </div>
+
+//           <p className="rp-section-label" style={{ marginTop: 24 }}>
+//             Tips
+//           </p>
+//           <div className="rp-tips">
+//             <div className="rp-tip">
+//               <span className="rp-tip-icon">💡</span>
+//               <p>
+//                 Use <strong>Shift+Enter</strong> to add a new line without
+//                 sending.
+//               </p>
+//             </div>
+//             <div className="rp-tip">
+//               <span className="rp-tip-icon">🔀</span>
+//               <p>
+//                 Switch models between messages to compare different approaches.
+//               </p>
+//             </div>
+//             <div className="rp-tip">
+//               <span className="rp-tip-icon">🧠</span>
+//               <p>
+//                 Ensemble Mode compares GPT-OSS 20B, GPT-OSS 120B, Gemma 4 and
+//                 GLM 4.7 Flash, then uses GPT-OSS 120B to synthesize the final
+//                 answer.
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </aside>
+//   );
+// }
 
 const MODEL_INFO = {
-  "auto":        { name: "Auto",              tokens: "8K",   speed: "Fastest", badge: "⚡" },
-  "groq-fast":   { name: "Llama 3.1 8B",      tokens: "128K", speed: "Fastest", badge: "⚡" },
-  "groq-large":  { name: "Llama 3.3 70B",     tokens: "128K", speed: "Fast",    badge: "🧠" },
-  "groq-qwen":   { name: "Qwen 3 32B",        tokens: "32K",  speed: "Fast",    badge: "🔮" },
-  "groq-llama4": { name: "Llama 4 Scout 17B", tokens: "128K", speed: "Fast",    badge: "🚀" },
+  auto: {
+    name: "Auto Routing",
+    provider: "Groq + Cloudflare Workers AI",
+    speed: "Intent-based selection",
+    badge: "⚡",
+    size: "Adaptive",
+    mode: "Automatic",
+  },
+
+  "groq-fast": {
+    name: "GPT-OSS 20B",
+    provider: "Groq Cloud",
+    speed: "Fast",
+    badge: "⚡",
+    size: "20B",
+    mode: "Manual",
+  },
+
+  "groq-large": {
+    name: "GPT-OSS 120B",
+    provider: "Groq Cloud",
+    speed: "Advanced reasoning",
+    badge: "🧠",
+    size: "120B",
+    mode: "Manual",
+  },
+
+  "cloudflare-gemma": {
+    name: "Gemma 4 26B A4B",
+    provider: "Cloudflare Workers AI",
+    speed: "General reasoning",
+    badge: "💎",
+    size: "26B A4B",
+    mode: "Manual",
+  },
+
+  "cloudflare-glm": {
+    name: "GLM 4.7 Flash",
+    provider: "Cloudflare Workers AI",
+    speed: "Fast reasoning",
+    badge: "✨",
+    size: "Flash",
+    mode: "Manual",
+  },
+
+  ensemble: {
+    name: "Ensemble Mode",
+    provider: "Groq + Cloudflare Workers AI",
+    speed: "Four concurrent models",
+    badge: "✦",
+    size: "4 models",
+    mode: "Ensemble",
+  },
 };
 
-export default function RightPanel({ messages = [], model = "groq-fast", onQuickPrompt, onLoadSession, onSuggestionClick }) {
-  const [tab, setTab] = useState("history");
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const info = MODEL_INFO[model] || MODEL_INFO["groq-fast"];
+const QUICK_PROMPTS = [
+  {
+    icon: "⚡",
+    label: "Explain a concept",
+    prompt: "Explain the concept of ",
+  },
+  {
+    icon: "🐛",
+    label: "Debug my code",
+    prompt: "Help me debug this code:\n\n",
+  },
+  {
+    icon: "✍️",
+    label: "Write a function",
+    prompt: "Write a function that ",
+  },
+  {
+    icon: "📋",
+    label: "Summarize this",
+    prompt: "Summarize the following:\n\n",
+  },
+];
 
-  // Fetch sessions on component mount
-  useEffect(() => {
-    console.log('RightPanel mounted, testing sessions...');
-    const fetchSessions = async () => {
-      try {
-        console.log('Calling getSessions...');
-        const sessionData = await getSessions();
-        console.log('Sessions response:', sessionData);
-        setSessions(sessionData);
-      } catch (error) {
-        console.error("Failed to fetch sessions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+const FALLBACK_MODEL_INFO = {
+  name: "GPT-OSS 20B",
+  provider: "Groq Cloud",
+  speed: "Fast",
+  badge: "⚡",
+  size: "20B",
+  mode: "Manual",
+};
 
-    fetchSessions();
-  }, []);
+function countWords(messages) {
+  if (!Array.isArray(messages)) return 0;
 
-  // Handle session click
-  const handleSessionClick = async (sessionId) => {
-    try {
-      const sessionMessages = await getSessionMessages(sessionId);
-      onLoadSession?.(sessionId, sessionMessages);
-    } catch (error) {
-      console.error("Failed to load session:", error);
-    }
-  };
+  return messages
+    .filter((message) => message.role === "assistant")
+    .reduce((total, message) => {
+      const content =
+        typeof message.content === "string"
+          ? message.content.trim()
+          : "";
 
-  const formattedSessions = sessions.map(session => ({
-    id: session._id,
-    title: session.title?.length < 50 ? session.title : session.title.substring(0, 47) + "...",
-    preview: session.lastMessage?.length < 100 ? session.lastMessage : session.lastMessage?.substring(0, 97) + "...",
-    messageCount: session.messageCount || 0
-  }));
+      return total + (content ? content.split(/\s+/).length : 0);
+    }, 0);
+}
 
-  const wordCount = messages
-    .filter(m => m.role === "assistant")
-    .reduce((acc, m) => acc + (m.content?.split(" ").length || 0), 0);
+export default function RightPanel({
+  messages = [],
+  model = "groq-fast",
+  onQuickPrompt,
+  onSuggestionClick,
+}) {
+  const promptHandler = onQuickPrompt || onSuggestionClick;
 
-  const msgCount = messages.filter(m => m.role === "user").length;
+  const info = MODEL_INFO[model] || FALLBACK_MODEL_INFO;
+
+  const userMessageCount = messages.filter(
+    (message) => message.role === "user"
+  ).length;
+
+  const assistantWordCount = countWords(messages);
 
   return (
     <aside className="right-panel">
 
-      {/* ── TABS ── */}
+      {/* ── SESSION HEADER ── */}
       <div className="rp-tabs">
-        <button
-          className={`rp-tab ${tab === "history" ? "active" : ""}`}
-          onClick={() => setTab("history")}
-        >
-          History
-        </button>
-        <button
-          className={`rp-tab ${tab === "info" ? "active" : ""}`}
-          onClick={() => setTab("info")}
-        >
-          Session
-        </button>
+        <div className="rp-tab active">
+          Session Overview
+        </div>
       </div>
 
-      {/* ── HISTORY TAB ── */}
-      {tab === "history" && (
-        <div className="rp-content">
-          <p className="rp-section-label">Recent chats</p>
+      <div className="rp-content">
 
-          <div className="rp-history-list">
-            {loading ? (
-              <div className="rp-history-loading">Loading conversations...</div>
-            ) : sessions.length === 0 ? (
-              <div className="rp-history-empty">No conversations yet</div>
-            ) : (
-              sessions.map(s => (
-                <div 
-                  key={s.id} 
-                  className="rp-history-item"
-                  onClick={() => handleSessionClick(s.id)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="rp-history-icon">💬</div>
-                  <div className="rp-history-body">
-                    <p className="rp-history-title">{s.title}</p>
-                    <p className="rp-history-preview">{s.preview}</p>
-                  </div>
-                  <span className="rp-history-time">{s.time}</span>
-                </div>
-              ))
-            )}
+        {/* ── ACTIVE MODEL ── */}
+        <p className="rp-section-label">
+          Active model
+        </p>
+
+        <div className="rp-model-card">
+          <div className="rp-model-badge">
+            {info.badge || "✦"}
           </div>
 
-          <p className="rp-section-label" style={{ marginTop: 24 }}>Quick prompts</p>
-          <div className="rp-quick-prompts">
-            {QUICK_PROMPTS.map(q => (
-              <button
-                key={q.label}
-                className="rp-quick-btn"
-                onClick={() => onQuickPrompt?.(q.prompt)}
-              >
-                <span>{q.icon}</span>
-                {q.label}
-              </button>
-            ))}
+          <div>
+            <p className="rp-model-name">
+              {info.name || "AI model"}
+            </p>
+
+            <p className="rp-model-meta">
+              {info.provider || "Provider unavailable"}
+              {info.speed ? ` · ${info.speed}` : ""}
+            </p>
           </div>
         </div>
-      )}
 
-      {/* ── SESSION TAB ── */}
-      {tab === "info" && (
-        <div className="rp-content">
-          <p className="rp-section-label">Active model</p>
-          <div className="rp-model-card">
-            <div className="rp-model-badge">{info.badge}</div>
-            <div>
-              <p className="rp-model-name">{info.name}</p>
-              <p className="rp-model-meta">via Groq LPU · {info.speed}</p>
-            </div>
+        {/* ── SESSION STATISTICS ── */}
+        <p className="rp-section-label">
+          Session statistics
+        </p>
+
+        <div className="rp-stats-grid">
+
+          <div className="rp-stat">
+            <span className="rp-stat-num">
+              {info.size || "—"}
+            </span>
+
+            <span className="rp-stat-label">
+              Model size / routing
+            </span>
           </div>
 
-          <div className="rp-stats-grid">
-            <div className="rp-stat">
-              <span className="rp-stat-num">{info.tokens}</span>
-              <span className="rp-stat-label">Context window</span>
-            </div>
-            <div className="rp-stat">
-              <span className="rp-stat-num">{msgCount}</span>
-              <span className="rp-stat-label">Messages sent</span>
-            </div>
-            <div className="rp-stat">
-              <span className="rp-stat-num">{wordCount}</span>
-              <span className="rp-stat-label">Words generated</span>
-            </div>
-            <div className="rp-stat">
-              <span className="rp-stat-num">&lt;1s</span>
-              <span className="rp-stat-label">Avg latency</span>
-            </div>
+          <div className="rp-stat">
+            <span className="rp-stat-num">
+              {info.mode || "—"}
+            </span>
+
+            <span className="rp-stat-label">
+              Selection mode
+            </span>
           </div>
 
-          <p className="rp-section-label" style={{ marginTop: 24 }}>Tips</p>
-          <div className="rp-tips">
-            <div className="rp-tip">
-              <span className="rp-tip-icon">💡</span>
-              <p>Use <strong>Shift+Enter</strong> to add a new line without sending.</p>
-            </div>
-            <div className="rp-tip">
-              <span className="rp-tip-icon">🔀</span>
-              <p>Switch models mid-conversation for different perspectives.</p>
-            </div>
-            <div className="rp-tip">
-              <span className="rp-tip-icon">🧠</span>
-              <p>Llama 3.3 70B is best for complex reasoning and long tasks.</p>
-            </div>
+          <div className="rp-stat">
+            <span className="rp-stat-num">
+              {userMessageCount}
+            </span>
+
+            <span className="rp-stat-label">
+              User messages
+            </span>
           </div>
+
+          <div className="rp-stat">
+            <span className="rp-stat-num">
+              {assistantWordCount}
+            </span>
+
+            <span className="rp-stat-label">
+              Assistant words
+            </span>
+          </div>
+
         </div>
-      )}
 
+        {/* ── QUICK PROMPTS ── */}
+        <p
+          className="rp-section-label"
+          style={{ marginTop: 24 }}
+        >
+          Quick prompts
+        </p>
+
+        <div className="rp-quick-prompts">
+          {QUICK_PROMPTS.map((prompt) => (
+            <button
+              key={prompt.label}
+              className="rp-quick-btn"
+              onClick={() => promptHandler?.(prompt.prompt)}
+              type="button"
+            >
+              <span>{prompt.icon}</span>
+              {prompt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── TIPS ── */}
+        <p
+          className="rp-section-label"
+          style={{ marginTop: 24 }}
+        >
+          Tips
+        </p>
+
+        <div className="rp-tips">
+
+          <div className="rp-tip">
+            <span className="rp-tip-icon">💡</span>
+
+            <p>
+              Use <strong>Shift+Enter</strong> to add a new
+              line without sending.
+            </p>
+          </div>
+
+          <div className="rp-tip">
+            <span className="rp-tip-icon">🔀</span>
+
+            <p>
+              Switch models between messages to compare
+              different approaches.
+            </p>
+          </div>
+
+          <div className="rp-tip">
+            <span className="rp-tip-icon">🧠</span>
+
+            <p>
+              Ensemble Mode compares GPT-OSS 20B,
+              GPT-OSS 120B, Gemma 4 and GLM 4.7 Flash,
+              then uses GPT-OSS 120B to synthesize
+              the final answer.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
     </aside>
   );
 }

@@ -944,3 +944,573 @@ div.ew-final.expanded {
 .ew-final {
   position: relative;
 }
+
+/* ─── AUTHENTICATION / ACCOUNT MENU ─────────────────────── */
+
+.auth-error {
+  padding: 12px;
+  background: rgba(255, 75, 75, 0.10);
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #ff8585;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.account-menu {
+  position: relative;
+}
+
+.account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px 7px 7px;
+  border: 1px solid var(--space-border);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--polar-white);
+  cursor: pointer;
+  font: inherit;
+  max-width: 230px;
+}
+
+.account-trigger:hover {
+  border-color: var(--midnight);
+  background: var(--midnight-soft);
+}
+
+.account-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4D30FF, #CB6FF2);
+  color: white;
+  font-weight: 800;
+}
+
+.account-trigger-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.account-chevron {
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 230px;
+  padding: 10px;
+  background: var(--space-card);
+  border: 1px solid var(--space-border);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  z-index: 200;
+}
+
+.account-dropdown-user {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.account-dropdown-user strong {
+  color: var(--polar-white);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-dropdown-user span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-dropdown a,
+.account-logout {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--off-white);
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.account-dropdown a:hover,
+.account-logout:hover {
+  background: var(--midnight-soft);
+  color: var(--polar-white);
+}
+
+.account-dropdown-divider {
+  height: 1px;
+  margin: 7px 0;
+  background: var(--space-border);
+}
+
+.account-logout {
+  color: #ff8585;
+}
+
+.account-menu-error {
+  padding: 8px 10px;
+  color: #ff8585;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+  }
+
+  .navbar-links a {
+    font-size: 0.75rem;
+  }
+
+  .account-trigger-name {
+    display: none;
+  }
+
+  .account-trigger {
+    padding: 5px;
+  }
+}
+
+/* ─── CHAT SIDEBAR ACCOUNT ─────────────────────────────── */
+
+.chat-account {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--space-border);
+}
+
+.chat-account-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--polar-white);
+  text-align: left;
+  transition: all var(--transition);
+}
+
+.chat-account-trigger:hover,
+.chat-account-trigger[aria-expanded="true"] {
+  background: var(--midnight-soft);
+  border-color: var(--space-border);
+}
+
+.chat-account-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--midnight), var(--cosmic-pink));
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.chat-account-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-account-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--polar-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-account-status {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.chat-account-chevron {
+  font-size: 0.9rem;
+  color: var(--muted);
+  padding: 0 5px;
+}
+
+.chat-account-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: min(340px, calc(100vh - 100px));
+  overflow-y: auto;
+  padding: 9px;
+  background: var(--space-card);
+  border: 1px solid var(--space-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.chat-account-menu-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.chat-account-menu-heading strong {
+  color: var(--polar-white);
+  font-size: 0.83rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-account-menu-heading span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.chat-account-divider {
+  height: 1px;
+  background: var(--space-border);
+  margin: 7px 0;
+}
+
+.chat-account-menu a,
+.chat-account-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--off-white);
+  text-align: left;
+  text-decoration: none;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  transition: all var(--transition);
+}
+
+.chat-account-menu a:hover,
+.chat-account-menu button:hover:not(:disabled) {
+  background: var(--midnight-soft);
+  color: var(--polar-white);
+}
+
+.chat-account-menu .chat-account-signout {
+  color: var(--danger);
+}
+
+.chat-account-menu .chat-account-signout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chat-account-error {
+  padding: 8px 10px;
+  color: var(--danger);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* ─── ENSEMBLE: FULL PAGE SCROLL LAYOUT ───────────────── */
+
+/* Keep header and input fixed while the content scrolls. */
+.ew-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* This is the only vertical scrolling region. */
+.ew-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+/* Preserve the four model cards at the top in a 2×2 layout. */
+.ew-grid {
+  flex: 0 0 auto;
+  height: clamp(420px, 54vh, 620px);
+  min-height: 420px;
+  max-height: none;
+  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+/* Each individual model response retains its own scroll. */
+.ew-window {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ew-window-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Synthesized answer now takes its natural full height. */
+.ew-final,
+.ew-final:hover,
+.ew-final:focus-within,
+div.ew-final.expanded {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  overflow: visible !important;
+  margin: 0;
+}
+
+/* Do not create a second scroll area inside the final answer. */
+.ew-final-body {
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: visible !important;
+}
+
+/* Input remains visible at the bottom. */
+.ew-input-area {
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+
+/* ============================================================
+   ENSEMBLE MODE — FULL SYNTHESIZED ANSWER SCROLL LAYOUT
+   ============================================================ */
+
+.ew-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Header and prompt remain visible. */
+.ew-header,
+.ew-prompt-bar {
+  flex-shrink: 0;
+}
+
+/* Main vertical scrolling region. */
+.ew-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Four model responses retain the 2 × 2 layout. */
+.ew-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  flex: 0 0 auto;
+  width: 100%;
+  height: clamp(460px, 60vh, 680px);
+  min-height: 460px;
+  max-height: none;
+  overflow: hidden;
+}
+
+/* Each model has its own internal scrollbar. */
+.ew-window {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ew-window-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Synthesized answer displays at its natural full height. */
+.ew-final,
+.ew-final:hover,
+.ew-final:focus-within,
+div.ew-final.expanded {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0;
+  overflow: visible !important;
+  scroll-margin-top: 12px;
+}
+
+/* Do not restrict the synthesized answer body. */
+.ew-final-body {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  padding: 20px 24px;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+}
+
+/* Header actions for the synthesized answer. */
+.ew-final-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+/* The final answer copy button should remain visible. */
+.ew-final-actions .copy-btn {
+  position: static;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+/* Keep the input docked to the bottom. */
+.ew-input-area {
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+  background: var(--space-black);
+}
+
+/* Smaller screens: stack four model responses vertically. */
+@media (max-width: 900px) {
+  .ew-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(4, minmax(260px, 1fr));
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .ew-window {
+    min-height: 260px;
+  }
+
+  .ew-final-body {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .ew-header {
+    padding: 14px 16px;
+  }
+
+  .ew-prompt-bar {
+    padding: 10px 16px;
+  }
+
+  .ew-input-area {
+    padding: 12px 14px 16px;
+  }
+}
+
+/* ─── FEATURES PAGE ICONS ───────────────────────────── */
+
+.feature-icon {
+  color: var(--cosmic-pink);
+}
+
+.feature-icon svg {
+  width: 23px;
+  height: 23px;
+  display: block;
+}
+
+/* ─── HOME PAGE FEATURE ICONS ───────────────────────── */
+
+.feature-icon {
+  color: var(--cosmic-pink);
+}
+
+.feature-icon svg {
+  width: 23px;
+  height: 23px;
+  display: block;
+}

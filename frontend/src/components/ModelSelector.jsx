@@ -36,7 +36,6 @@
 //         <option value="groq-fast">Llama 3.1 8B — Fast</option>
 //         <option value="groq-large">Llama 3.3 70B — Powerful</option>
 //         <option value="groq-qwen">Qwen 3 32B — Alibaba</option>
-//         <option value="groq-llama4">Llama 4 Scout — Latest</option>
 //       </optgroup>
 //     </select>
 //   );
@@ -53,13 +52,12 @@ export default function ModelSelector({ model, setModel }) {
       onChange={(e) => setModel(e.target.value)}
     >
       <optgroup label="Auto">
-        <option value="auto">Auto (Groq Fast)</option>
+        <option value="auto">Auto — GPT-OSS 20B</option>
       </optgroup>
       <optgroup label="Groq Cloud">
-        <option value="groq-fast">Llama 3.1 8B — Fast</option>
-        <option value="groq-large">Llama 3.3 70B — Powerful</option>
-        <option value="groq-qwen">Qwen 3 32B — Alibaba</option>
-        <option value="groq-llama4">Llama 4 Scout — Latest</option>
+        <option value="groq-fast">GPT-OSS 20B — Fast</option>
+        <option value="groq-large">GPT-OSS 120B — Advanced Reasoning</option>
+        <option value="groq-qwen">Qwen 3.8 27B — Preview</option>
       </optgroup>
     </select>
   );

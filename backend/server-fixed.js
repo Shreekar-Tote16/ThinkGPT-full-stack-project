@@ -126,15 +126,25 @@ app.get("/api/models", (req, res) => {
   res.json({
     default: DEFAULT_MODEL,
     available: [
-      { id: "auto",        label: "Auto (Groq Fast)" },
-      { id: "groq-fast",   label: "Llama 3.1 8B — Fast" },
-      { id: "groq-large",  label: "Llama 3.3 70B — Powerful" },
-      { id: "groq-qwen",   label: "Qwen 3 32B — Alibaba" },
-      { id: "groq-llama4", label: "Llama 4 Scout — Latest" },
+      {
+        id: "auto",
+        label: "Auto — GPT-OSS 20B",
+      },
+      {
+        id: "groq-fast",
+        label: "GPT-OSS 20B — Fast",
+      },
+      {
+        id: "groq-large",
+        label: "GPT-OSS 120B — Advanced Reasoning",
+      },
+      {
+        id: "groq-qwen",
+        label: "Qwen 3.8 27B — Preview",
+      },
     ],
   });
 });
-
 // ================= START =================
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on http://localhost:${PORT}`);

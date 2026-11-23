@@ -1,43 +1,56 @@
-// services/router.service.js
+//C:\Users\user\ThinkGPT\backend\services\router.service.js
+const SUPPORTED_MODELS = new Set([
+  "groq-fast",
+  "groq-large",
+  "cloudflare-gemma",
+  "cloudflare-glm",
+]);
 
-/**
- * Decide which model to use.
- * Priority:
- * 1. User-selected model (frontend override)
- * 2. System auto-routing based on intent
- * 3. Default fallback
- */
-
-function decideModel({ message, userModel }) {
-  // 1️⃣ User override always wins
+function decideModel({
+  message,
+  userModel = "auto",
+}) {
+  // Manual model selection always takes priority.
   if (userModel && userModel !== "auto") {
+    if (!SUPPORTED_MODELS.has(userModel)) {
+      throw new Error(
+        `Unsupported model selected: ${userModel}`
+      );
+    }
+
     return userModel;
   }
 
-  const text = message.toLowerCase();
+  const text = String(message || "").toLowerCase();
 
-  // 2️⃣ Intent-based routing
-  if (
-    text.includes("code") ||
-    text.includes("react") ||
-    text.includes("python") ||
-    text.includes("bug") ||
-    text.includes("algorithm")
-  ) {
-    return "deepseek-coder"; // future-ready
+  // Programming and debugging requests.
+  const codingIntent =
+    /\b(code|coding|programming|debug|bug|algorithm|python|react|javascript|typescript|node|sql|function)\b/i;
+
+  if (codingIntent.test(text)) {
+    return "groq-large";
   }
 
-  if (
-    text.includes("notes") ||
-    text.includes("explain") ||
-    text.includes("summary") ||
-    text.includes("definition")
-  ) {
-    return "qwen2.5:0.5b";
+  // Complex reasoning, comparison and architecture.
+  const reasoningIntent =
+    /\b(analyze|analysis|compare|architecture|evaluate|reasoning|optimization|mathematical|proof|technical design)\b/i;
+
+  if (reasoningIntent.test(text)) {
+    return "cloudflare-gemma";
   }
 
-  // 3️⃣ Default fallback
-  return "qwen2.5:0.5b";
+  // Writing, explanation and summarization.
+  const writingIntent =
+    /\b(summarize|summary|translate|rewrite|explain|notes|definition|draft|compose)\b/i;
+
+  if (writingIntent.test(text)) {
+    return "cloudflare-glm";
+  }
+
+  // Default for everyday conversations.
+  return "groq-fast";
 }
 
-module.exports = { decideModel };
+module.exports = {
+  decideModel,
+};

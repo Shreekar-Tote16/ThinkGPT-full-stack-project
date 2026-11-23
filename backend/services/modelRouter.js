@@ -1,62 +1,180 @@
-// services/modelRouter.js
+//C:\Users\user\ThinkGPT\backend\services\modelRouter.js
 const { runGroq } = require("./providers/groq");
+const { runCloudflare } = require("./providers/cloudflare");
 
-/**
- * Legacy function for backward compatibility
- * Converts single prompt to messages format
- */
-async function generateResponse({ prompt, model = "groq-fast" }) {
-  const messages = [{ role: "user", content: prompt }];
-  
-  const response = await runGroq({
-    messages,
-    model: model,  // Use the model key directly
-    stream: false
-  });
+// ==========================================
+// PROVIDER REGISTRY
+// ==========================================
 
-  return response;
+const MODEL_PROVIDERS = {
+  "groq-fast": runGroq,
+  "groq-large": runGroq,
+
+  "cloudflare-gemma": runCloudflare,
+  "cloudflare-glm": runCloudflare,
+};
+
+// ==========================================
+// PROVIDER RESOLUTION
+// ==========================================
+
+function getProvider(model) {
+  const provider = MODEL_PROVIDERS[model];
+
+  if (!provider) {
+    throw new Error(
+      `Unsupported model "${model}". Available models: ${
+        Object.keys(MODEL_PROVIDERS).join(", ")
+      }`
+    );
+  }
+
+  return provider;
 }
 
-/**
- * Legacy function for backward compatibility
- * Handles streaming responses
- */
-async function generateStream({ prompt, model = "groq-fast", res, onDone }) {
-  const messages = [{ role: "user", content: prompt }];
+// ==========================================
+// MESSAGE NORMALIZATION
+// ==========================================
+
+function normalizeMessages({ prompt, messages }) {
+  if (Array.isArray(messages) && messages.length > 0) {
+    return messages;
+  }
+
+  if (typeof prompt === "string" && prompt.trim()) {
+    return [
+      {
+        role: "user",
+        content: prompt.trim(),
+      },
+    ];
+  }
+
+  throw new Error("A valid prompt or messages array is required.");
+}
+
+// ==========================================
+// NORMAL GENERATION
+// ==========================================
+
+async function generateResponse({
+  prompt,
+  messages,
+  model = "groq-fast",
+  signal,
+}) {
+  const provider = getProvider(model);
+
+  const normalizedMessages = normalizeMessages({
+    prompt,
+    messages,
+  });
+
+  return provider({
+    messages: normalizedMessages,
+    model,
+    stream: false,
+    signal,
+  });
+}
+
+// ==========================================
+// STREAMING GENERATION
+// ==========================================
+
+async function generateStream({
+  prompt,
+  messages,
+  model = "groq-fast",
+  res,
+  onDone,
+  signal,
+}) {
+  if (!res) {
+    throw new Error("Express response object is required.");
+  }
+
+  if (signal?.aborted) {
+    throw new Error("Generation cancelled.");
+  }
+
+  const provider = getProvider(model);
+
+  const normalizedMessages = normalizeMessages({
+    prompt,
+    messages,
+  });
+
   let fullResponse = "";
 
   try {
-    await runGroq({
-      messages,
-      model: model,  // Use the model key directly
+    const response = await provider({
+      messages: normalizedMessages,
+      model,
       stream: true,
+      signal,
+
       onToken: (token) => {
+        if (
+          signal?.aborted ||
+          res.destroyed ||
+          res.writableEnded
+        ) {
+          return;
+        }
+
         fullResponse += token;
-        // Send token as raw JSON line (not SSE format)
-        res.write(`${JSON.stringify({ token })}\n`);
-      }
+
+        // Existing ThinkGPT NDJSON format.
+        res.write(JSON.stringify({ token }) + "\n");
+      },
     });
 
-    // Send final message with complete response
-    res.write(`${JSON.stringify({ 
-      done: true, 
-      response: fullResponse 
-    })}\n`);
-    
-    if (onDone && typeof onDone === "function") {
-      onDone(fullResponse);
+    if (signal?.aborted) {
+      return fullResponse;
     }
 
-  } catch (error) {
-    console.error("Streaming error:", error.message);
-    if (!res.headersSent) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.write(`${JSON.stringify({ error: error.message })}\n`);
+    if (typeof response === "string") {
+      fullResponse = response;
     }
+
+    // Persist the completed message before sending done.
+    if (typeof onDone === "function") {
+      await onDone(fullResponse);
+    }
+
+    if (
+      !signal?.aborted &&
+      !res.destroyed &&
+      !res.writableEnded
+    ) {
+      res.write(
+        JSON.stringify({
+          done: true,
+          response: fullResponse,
+        }) + "\n"
+      );
+    }
+
+    return fullResponse;
+
+  } catch (error) {
+    if (
+      signal?.aborted ||
+      error.message === "Generation cancelled."
+    ) {
+      return fullResponse;
+    }
+
+    throw error;
   }
 }
 
+// ==========================================
+// EXPORTS
+// ==========================================
+
 module.exports = {
-  generateResponse,  // Legacy compatibility
-  generateStream    // Legacy compatibility
+  generateResponse,
+  generateStream,
 };

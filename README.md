@@ -1,6 +1,6 @@
-<<<<<<< HEAD
+
 # ThinkGPT — Multi-Model AI Chat Platform
-=======
+
 # ThinkGPT – AI-Powered Multi-Model Conversational Platform
 
 ThinkGPT is an advanced AI-powered conversational platform that integrates multiple language models into a unified interface. It provides intelligent, context-aware responses and introduces an Ensemble Mode, which combines outputs from multiple models to generate a more accurate and refined answer.
